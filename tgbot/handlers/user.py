@@ -12,7 +12,7 @@ router = Router()
 
 @router.message(Command('start'))
 async def user_start(message: Message):
-    schedule_task.apply_async(eta=datetime.utcnow() + timedelta(seconds=20))
+    schedule_task.apply_async(eta=datetime.utcnow() + timedelta(seconds=5))
     await message.answer('Доступ в бота возможен только из админской группы')
 
 
