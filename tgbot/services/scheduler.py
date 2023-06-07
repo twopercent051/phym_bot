@@ -22,6 +22,8 @@ async def main_dispatcher(user_id: str, step: str, feedback: str|None):
         next_step_dtime = datetime.utcnow() + timedelta(days=2)
         next_step_dtime = datetime.utcnow() + timedelta(seconds=5)
         kb = UserInlineKeyboard.heating_kb()
+        await msg_config(user_id=user_id, chapter=step, kb=kb)
+        return
     if step == "intro|start_polling":
         kb = UserInlineKeyboard.ok_kb()
         await msg_config(user_id=user_id, chapter=step, kb=kb)
