@@ -40,7 +40,7 @@ async def heating(callback: CallbackQuery):
     next_step_dtime = datetime.utcnow() + timedelta(seconds=5)
     kb = UserInlineKeyboard.heating_kb()
     await msg_config(user_id=user_id, chapter="intro|heating", kb=kb)
-    await update_scheduler(user_id=user_id, next_step=next_step, dtime=next_step_dtime)
+    # await update_scheduler(user_id=user_id, next_step=next_step, dtime=next_step_dtime)
 
 
 @router.callback_query(F.data == "yes_ready")
@@ -50,6 +50,7 @@ async def what_i_need(callback: CallbackQuery):
     next_step_time = datetime.utcnow() + timedelta(seconds=5)
     await msg_config(user_id=user_id, chapter="intro|what_i_need")
     await update_scheduler(user_id=user_id, next_step="intro|start_polling", dtime=next_step_time)
+    await bot.answer_callback_query(callback.id)
 
 
 @router.callback_query(F.data == "ok")
