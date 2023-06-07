@@ -45,7 +45,7 @@ async def heating(callback: CallbackQuery):
 
 @router.callback_query(F.data == "yes_ready")
 async def what_i_need(callback: CallbackQuery):
-    user_id = callback.from_user.id
+    user_id = str(callback.from_user.id)
     next_step_time = datetime.utcnow() + timedelta(hours=1)
     next_step_time = datetime.utcnow() + timedelta(seconds=5)
     await msg_config(user_id=user_id, chapter="intro|what_i_need")
