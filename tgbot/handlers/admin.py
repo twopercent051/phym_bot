@@ -5,13 +5,15 @@ from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.filters import Command
 from aiogram import F, Router
 
-from create_bot import bot
+from create_bot import bot, config
 from tgbot.filters.admin import AdminFilter
 from tgbot.keyboards.inline import AdminInlineKeyboard
 from tgbot.misc.states import AdminFSM
 from tgbot.misc.text_config import user_profile_config, user_feedbacks
 from tgbot.models.sql_connector import TextsDAO, UsersDAO
 from tgbot.services.xlsx_create import create_excel
+
+admin_group = config.tg_bot.admin_group
 
 router = Router()
 router.message.filter(AdminFilter())
@@ -121,7 +123,7 @@ async def find_user(callback: CallbackQuery):
     await create_excel(user_list=user_list)
     kb = AdminInlineKeyboard.users_kb()
     file = FSInputFile(path=f'{os.getcwd()}/user_list.xlsx', filename=f"user_list.xlsx")
-    await bot.send_document(chat_id=callback.from_user.id, document=file, reply_markup=kb)
+    await bot.send_document(chat_id=admin_group, document=file, reply_markup=kb)
     await bot.answer_callback_query(callback.id)
 
 
