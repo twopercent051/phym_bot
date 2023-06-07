@@ -131,6 +131,7 @@ async def timezone(callback: CallbackQuery):
     next_step_time = next_step_timer(user_tz=tz, days_offset=1, tm_hours=20)
     next_step_time = datetime.utcnow() + timedelta(seconds=5)
     await update_scheduler(user_id=user_id, next_step="week:1|program", dtime=next_step_time)
+    await bot.answer_callback_query(callback.id)
 
 
 @router.callback_query(F.data.split(":")[0] == "feedback_1")

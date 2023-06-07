@@ -83,15 +83,14 @@ async def main_dispatcher(user_id: str, step: str, feedback: str|None):
             else:
                 step = f"workout:{workout_id}|week:{week_id}|sup_positive"
         if subject == "habit":
-            if workout_id == 1 or workout_id == 2:
-                next_step_dtime = next_step_timer(user_tz=tz, days_offset=1, tm_hours=12)
-                next_step_dtime = datetime.utcnow() + timedelta(seconds=5)
-                next_step = f"workout:{workout_id + 1}|week:{week_id}|program"
-            else:
+            if workout_id == 3:
                 next_step = f"week:{week_id}|congratulation"
                 next_step_dtime = next_step_timer(user_tz=tz, days_offset=0, tm_hours=21)
                 next_step_dtime = datetime.utcnow() + timedelta(seconds=5)
-    await msg_config(user_id=user_id, chapter=step, kb=kb)
+            else:
+                next_step_dtime = next_step_timer(user_tz=tz, days_offset=1, tm_hours=12)
+                next_step_dtime = datetime.utcnow() + timedelta(seconds=5)
+                next_step = f"workout:{workout_id + 1}|week:{week_id}|program"
     await update_scheduler(user_id=user_id, next_step=next_step, dtime=next_step_dtime)
 
 
