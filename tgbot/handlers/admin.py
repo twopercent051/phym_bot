@@ -1,66 +1,149 @@
+import os
+
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
-from aiogram.filters import CommandStart, Command
+from aiogram.types import Message, CallbackQuery, FSInputFile
+from aiogram.filters import Command
 from aiogram import F, Router
-from aiogram.filters.state import StateFilter
 
 from create_bot import bot
 from tgbot.filters.admin import AdminFilter
-from tgbot.keyboards.inline import InlineKeyboard as inline_kb
+from tgbot.keyboards.inline import AdminInlineKeyboard
 from tgbot.misc.states import AdminFSM
-from tgbot.models.redis_connector import RedisConnector as rds
+from tgbot.misc.text_config import user_profile_config, user_feedbacks
+from tgbot.models.sql_connector import TextsDAO, UsersDAO
+from tgbot.services.xlsx_create import create_excel
 
 router = Router()
 router.message.filter(AdminFilter())
+router.callback_query.filter(AdminFilter())
 
 
-@router.message(Command('start'), StateFilter('*'))
-async def admin_start_msg(message: Message, state: FSMContext):
-    text = 'Привет, хозяева. Это главное меню. Пока тут можно только выбрать ключевые слова'
-    kb = inline_kb.main_menu_kb()
+@router.message(Command('start'))
+async def main_menu(message: Message, state: FSMContext):
+    text = "Добро пожаловать в  главное меню"
+    kb = AdminInlineKeyboard.main_menu_kb()
     await state.set_state(AdminFSM.home)
     await message.answer(text, reply_markup=kb)
 
 
-@router.callback_query(F.data == 'home', StateFilter('*'))
-async def admin_start_clb(callback: CallbackQuery, state: FSMContext):
-    text = 'Привет, хозяева. Это главное меню. Пока тут можно только выбрать ключевые слова'
-    kb = inline_kb.main_menu_kb()
+@router.callback_query(F.data == "home")
+async def main_menu(callback: CallbackQuery, state: FSMContext):
+    text = "Добро пожаловать в  главное меню"
+    kb = AdminInlineKeyboard.main_menu_kb()
     await state.set_state(AdminFSM.home)
     await callback.message.answer(text, reply_markup=kb)
     await bot.answer_callback_query(callback.id)
 
 
-@router.callback_query(F.data == 'keywords', AdminFSM.home)
-async def keywords_list(callback: CallbackQuery, state: FSMContext):
-    kw_list = await rds.get_kw_list()
-    if kw_list:
-        text = ['<b>Список ключевых слов:</b>\n']
-        for row in kw_list:
-            text.append(f'<i>{row}</i>')
-        text.append('\nДля изменения списка отправьте его ответным сообщением. Каждое ключевое выражение отдельной '
-                    'строкой через ENTER. Поиск идет по вхождениям неполных'
-                    'слов. Например: по ключевому слову <i>карт</i> будут найдены сообщения со словами <i>карты, '
-                    'карточка, картон</i>')
-    else:
-        text = [
-            '<b>Вы не задали ключевые слова.</b>',
-            '\nДля изменения списка отправьте его ответным сообщением. Поиск идет по вхождениям неполных Каждое '
-            'ключевое выражение отдельной строкой через ENTER. Поиск идет по вхождениям неполных'
-            'слов. Например: по ключевому слову <i>карт</i> будут найдены сообщения со словами <i>карты, '
-            'карточка, картон</i>'
-        ]
-    kb = inline_kb.home_kb()
-    await state.set_state(AdminFSM.get_kw)
-    await callback.message.answer('\n'.join(text), reply_markup=kb)
+@router.callback_query(F.data == "edit_text")
+async def edit_text(callback: CallbackQuery):
+    text = "Выберите раздел редактирования"
+    kb = AdminInlineKeyboard.edition_menu()
+    await callback.message.answer(text, reply_markup=kb)
     await bot.answer_callback_query(callback.id)
 
 
-@router.message(F.text, AdminFSM.get_kw)
-async def get_kw(message: Message, state: FSMContext):
-    new_kw = message.text.split('\n')
-    await rds.update_kw_list(new_kw)
-    text = 'Изменения сохранены.'
-    kb = inline_kb.kw_kb()
+@router.callback_query(F.data.split(":")[0] == "week")
+async def edit_week(callback: CallbackQuery, state: FSMContext):
+    week_id = callback.data.split(":")[1]
+    text = "Выберите раздел редактирования"
+    kb = AdminInlineKeyboard.week_menu()
+    await state.update_data(week_id=week_id)
+    await callback.message.answer(text, reply_markup=kb)
+    await bot.answer_callback_query(callback.id)
+
+
+@router.callback_query(F.data.split(":")[0] == "workout")
+async def edit_workout(callback: CallbackQuery, state: FSMContext):
+    workout_id = callback.data.split(":")[1]
+    await state.update_data(workout_id=workout_id)
+    text = "Выберите раздел редактирования"
+    kb = AdminInlineKeyboard.workout_menu()
+    await callback.message.answer(text, reply_markup=kb)
+    await bot.answer_callback_query(callback.id)
+
+
+@router.callback_query(F.data.split(":")[0] == "edit")
+async def edit_text(callback: CallbackQuery, state: FSMContext):
+    chapter = callback.data.split("|")[0].split(":")[1]
+    subject = callback.data.split("|")[1]
+    if chapter == "intro":
+        query = f"intro|{subject}"
+    elif chapter == "week":
+        state_data = await state.get_data()
+        week_id = state_data["week_id"]
+        query = f"week:{week_id}|{subject}"
+    else:
+        state_data = await state.get_data()
+        week_id = state_data["week_id"]
+        workout_id = state_data["workout_id"]
+        query = f"workout:{workout_id}|week:{week_id}|{subject}"
+    await state.update_data(query=query)
+    msg_sql = await TextsDAO.get_one_or_none(chapter=query)
+    kb = AdminInlineKeyboard.home_kb()
+    if msg_sql:
+        await callback.message.answer("Сейчас сообщение такое:")
+        await state.update_data(is_none=False)
+        if msg_sql["photo_id"]:
+            await callback.message.answer_photo(photo=msg_sql["photo_id"], caption=msg_sql["text"], reply_markup=kb)
+        else:
+            await callback.message.answer(msg_sql["text"])
+    else:
+        text = "Отправьте текст или картинку с текстом одним сообщением. Форматирование будет сохранено"
+        await callback.message.answer(text, reply_markup=kb)
+        await state.update_data(is_none=True)
+    await state.set_state(AdminFSM.edit)
+    await bot.answer_callback_query(callback.id)
+
+
+@router.message(F.text, AdminFSM.edit)
+@router.message(F.photo, AdminFSM.edit)
+async def edit_intro(message: Message, state: FSMContext):
+    state_data = await state.get_data()
+    is_none = state_data["is_none"]
+    photo_id = None
+    if message.photo:
+        photo_id = message.photo[-1].file_id
+    new_text = message.html_text
+    text = "Сообщение сохранено"
+    kb = AdminInlineKeyboard.home_kb()
+    if is_none:
+        await TextsDAO.create(chapter=state_data["query"], photo_id=photo_id, text=new_text)
+    else:
+        await TextsDAO.update(chapter=state_data["query"], photo_id=photo_id, text=new_text)
+    await state.set_state(AdminFSM.home)
+    await message.answer(text, reply_markup=kb)
+
+
+@router.callback_query(F.data == "users")
+async def find_user(callback: CallbackQuery):
+    user_list = await UsersDAO.get_many()
+    await create_excel(user_list=user_list)
+    kb = AdminInlineKeyboard.users_kb()
+    file = FSInputFile(path=f'{os.getcwd()}/user_list.xlsx', filename=f"user_list.xlsx")
+    await bot.send_document(chat_id=callback.from_user.id, document=file, reply_markup=kb)
+    await bot.answer_callback_query(callback.id)
+
+
+@router.callback_query(F.data == "find_user")
+async def find_user(callback: CallbackQuery, state: FSMContext):
+    text = "Введите id пользователя"
+    kb = AdminInlineKeyboard.home_kb()
+    await state.set_state(AdminFSM.users)
+    await callback.message.answer(text, reply_markup=kb)
+    await bot.answer_callback_query(callback.id)
+
+
+@router.message(F.text, AdminFSM.users)
+async def user_profile(message: Message, state: FSMContext):
+    user_id = message.text
+    user = await UsersDAO.get_one_or_none(user_id=user_id)
+    kb = AdminInlineKeyboard.home_kb()
+    if user:
+        profile_text = await user_profile_config(user=user)
+        text = await user_feedbacks(user_id=user_id)
+        await message.answer(profile_text)
+    else:
+        text = "Такой пользователь не найден"
     await state.set_state(AdminFSM.home)
     await message.answer(text, reply_markup=kb)
