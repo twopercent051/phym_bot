@@ -145,7 +145,19 @@ async def user_profile(message: Message, state: FSMContext):
         profile_text = await user_profile_config(user=user)
         text = await user_feedbacks(user_id=user_id)
         await message.answer(profile_text)
+        if user["status"] == "finished":
+            kb = AdminInlineKeyboard.user_reset_kb()
     else:
         text = "Такой пользователь не найден"
     await state.set_state(AdminFSM.home)
     await message.answer(text, reply_markup=kb)
+
+
+@router.callback_query(F.data.split(":")[0] == "reset")
+async def reset_user(callback: CallbackQuery):
+    user_id = callback.data.split(":")[1]
+    text = "Прогресс пользователя сброшен"
+    kb = AdminInlineKeyboard.home_kb()
+    await UsersDAO.update_user_id(user_id=user_id, status="reset")
+    await callback.message.answer(text, reply_markup=kb)
+    await bot.answer_callback_query(callback.id)

@@ -22,9 +22,10 @@ async def user_start(message: Message):
     username = f"@{message.from_user.username}" if message.from_user.username else ""
     user_profile = await UsersDAO.get_one_or_none(user_id=user_id)
     if user_profile:
-        pass
+        if user_profile["status"] == "finished":
+            return
     else:
-        await UsersDAO.create(user_id=user_id, username=username)
+        await UsersDAO.create(user_id=user_id, username=username, status="started")
     await msg_config(user_id=user_id, chapter="intro|greeting")
     # await update_scheduler(user_id=user_id, next_step="intro|how_it_work",
     #                        dtime=datetime.utcnow() + timedelta(hours=1))
@@ -149,7 +150,7 @@ async def feedback_1(callback: CallbackQuery):
         kb = None
         next_step_time = datetime.utcnow() + timedelta(minutes=2)
         next_step_time = datetime.utcnow() + timedelta(seconds=5)
-        await update_scheduler(user_id=user_id, next_step=f"workout:{workout_id}|week:{week_id}|support",
+        await update_scheduler(user_id=user_id, next_step=f"workout:{workout_id}|week:{week_id}|sup_negative",
                                dtime=next_step_time)
     await callback.message.answer(text, reply_markup=kb)
     await bot.answer_callback_query(callback.id)
@@ -165,7 +166,7 @@ async def feedback_2(callback: CallbackQuery):
     text = "Отлично, спасибо. Ожидайте дальнейших сообщений."
     next_step_time = datetime.utcnow() + timedelta(minutes=2)
     next_step_time = datetime.utcnow() + timedelta(seconds=5)
-    await update_scheduler(user_id=user_id, next_step=f"workout:{workout_id}|week:{week_id}|support",
+    await update_scheduler(user_id=user_id, next_step=f"workout:{workout_id}|week:{week_id}|sup_positive",
                            dtime=next_step_time)
     await callback.message.answer(text)
     await bot.answer_callback_query(callback.id)
@@ -179,6 +180,7 @@ async def feedback_week(callback: CallbackQuery):
     await FeedbacksDAO.update_week_id(user_id=user_id, week_id=week_id, feedback_week=feedback)
     if week_id == 3:
         kb = UserInlineKeyboard.trainer_kb()
+        await UsersDAO.update_user_id(user_id=user_id, status="finished")
         await msg_config(user_id=user_id, chapter="intro|finish_course", kb=kb)
     else:
         text = "Отлично, спасибо. Ожидайте дальнейших сообщений."

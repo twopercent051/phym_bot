@@ -46,6 +46,7 @@ class UsersDB(Base):
     timezone = Column(Integer, nullable=True)
     next_step = Column(String, nullable=True)
     dtime = Column(TIMESTAMP, nullable=True)
+    status = Column(String, nullable=False)
 
 
 class FeedbacksDB(Base):

@@ -6,7 +6,7 @@ from tgbot.misc.text_config import msg_config, next_step_timer
 from tgbot.models.sql_connector import UsersDAO
 
 
-async def main_dispatcher(user_id: str, step: str, feedback: str|None):
+async def main_dispatcher(user_id: str, step: str):
     next_step, next_step_dtime, kb = None, None, None
     if step == "intro|how_it_work":
         next_step = "intro|are_you_ready"
@@ -74,14 +74,10 @@ async def main_dispatcher(user_id: str, step: str, feedback: str|None):
             kb = UserInlineKeyboard.feedback_1_kb(week_id=week_id, workout_id=workout_id)
             await bot.send_message(chat_id=user_id, text=text, reply_markup=kb)
             return
-        if subject == "support":
+        if subject == "sup_positive" or subject == "sup_negative":
             next_step = f"workout:{workout_id}|week:{week_id}|habit"
             next_step_dtime = next_step_timer(user_tz=tz, days_offset=1, tm_hours=10)
             next_step_dtime = datetime.utcnow() + timedelta(seconds=5)
-            if feedback == "negative":
-                step = f"workout:{workout_id}|week:{week_id}|sup_negative"
-            else:
-                step = f"workout:{workout_id}|week:{week_id}|sup_positive"
         if subject == "habit":
             if workout_id == 3:
                 next_step = f"week:{week_id}|congratulation"
@@ -95,7 +91,7 @@ async def main_dispatcher(user_id: str, step: str, feedback: str|None):
     await update_scheduler(user_id=user_id, next_step=next_step, dtime=next_step_dtime)
 
 
-async def update_scheduler(user_id: str, next_step: str, dtime: datetime, feedback=None):
+async def update_scheduler(user_id: str, next_step: str, dtime: datetime):
     await UsersDAO.update_user_id(user_id=user_id, next_step=next_step, dtime=dtime)
     scheduler.add_job(
         main_dispatcher,
@@ -103,7 +99,6 @@ async def update_scheduler(user_id: str, next_step: str, dtime: datetime, feedba
         next_run_time=dtime,
         kwargs={
             "user_id": user_id,
-            "step": next_step,
-            "feedback": feedback
+            "step": next_step
         }
     )

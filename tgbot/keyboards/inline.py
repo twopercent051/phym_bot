@@ -69,6 +69,14 @@ class AdminInlineKeyboard:
         ]
         return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
+    @classmethod
+    def user_reset_kb(cls, user_id=None):
+        keyboard = []
+        if user_id:
+            keyboard.append(InlineKeyboardButton(text='↩️ Сбросить пользователя', callback_data=f'reset:{user_id}'))
+        keyboard.append([InlineKeyboardButton(text='🏡 Домой', callback_data='home')])
+        return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
 
 class UserInlineKeyboard:
     """Клавиатура пользователя"""
