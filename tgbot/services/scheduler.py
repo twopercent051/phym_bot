@@ -31,7 +31,7 @@ async def main_dispatcher(user_id: str, step: str, feedback: str|None):
     if step.split(":")[0] == "week":
         user_profile = await UsersDAO.get_one_or_none(user_id=user_id)
         tz = user_profile["timezone"]
-        week_id = step.split("|")[0].split(":")[1]
+        week_id = int(step.split("|")[0].split(":")[1])
         subject = step.split("|")[1]
         if subject == "program":
             next_step = f"week:{week_id}|focus"
@@ -58,8 +58,8 @@ async def main_dispatcher(user_id: str, step: str, feedback: str|None):
     if step.split(":")[0] == "workout":
         user_profile = await UsersDAO.get_one_or_none(user_id=user_id)
         tz = user_profile["timezone"]
-        workout_id = step.split("|")[0].split(":")[1]
-        week_id = step.split("|")[1].split(":")[1]
+        workout_id = int(step.split("|")[0].split(":")[1])
+        week_id = int(step.split("|")[1].split(":")[1])
         subject = step.split("|")[2]
         if subject == "program":
             next_step = f"workout:{workout_id}|week:{week_id}|reminder"
