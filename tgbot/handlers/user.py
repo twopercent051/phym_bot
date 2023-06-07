@@ -185,7 +185,7 @@ async def feedback_week(callback: CallbackQuery):
         user_profile = await UsersDAO.get_one_or_none(user_id=user_id)
         next_step_time = next_step_timer(user_tz=user_profile["timezone"], days_offset=1, tm_hours=20)
         next_step_time = datetime.utcnow() + timedelta(seconds=5)
-        await update_scheduler(user_id=user_id, next_step=f"workout:1|week:{week_id + 1}|support", dtime=next_step_time)
+        await update_scheduler(user_id=user_id, next_step=f"workout:1|week:{week_id + 1}|program", dtime=next_step_time)
         await callback.message.answer(text)
     await bot.answer_callback_query(callback.id)
 
