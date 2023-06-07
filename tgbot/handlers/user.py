@@ -64,7 +64,7 @@ async def start_polling(callback: CallbackQuery, state: FSMContext):
 async def year(message: Message, state: FSMContext):
     user_id = str(message.from_user.id)
     if message.text.isdigit() and 1900 < int(message.text) < 2022:
-        await UsersDAO.update_user_id(user_id=user_id, year=message.text)
+        await UsersDAO.update_user_id(user_id=user_id, year=int(message.text))
         text = 'Рост (в сантиметрах)'
         await state.set_state(UserFSM.height)
     else:
@@ -76,7 +76,7 @@ async def year(message: Message, state: FSMContext):
 async def height(message: Message, state: FSMContext):
     user_id = str(message.from_user.id)
     if message.text.isdigit() and 30 < int(message.text) < 250:
-        await UsersDAO.update_user_id(user_id=user_id, height=message.text)
+        await UsersDAO.update_user_id(user_id=user_id, height=int(message.text))
         text = 'Вес (в килограммах)'
         await state.set_state(UserFSM.weight)
     else:
@@ -88,7 +88,7 @@ async def height(message: Message, state: FSMContext):
 async def weight(message: Message, state: FSMContext):
     user_id = str(message.from_user.id)
     if message.text.isdigit() and 30 < int(message.text) < 250:
-        await UsersDAO.update_user_id(user_id=user_id, weight=message.text)
+        await UsersDAO.update_user_id(user_id=user_id, weight=int(message.text))
         text = 'Курите?'
         kb = UserInlineKeyboard.smoking_kb()
         await state.set_state(UserFSM.home)
