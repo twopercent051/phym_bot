@@ -38,9 +38,9 @@ class AdminInlineKeyboard:
         keyboard = [
             [InlineKeyboardButton(text='Программа на неделю', callback_data='edit:week|program')],
             [InlineKeyboardButton(text='Фокус', callback_data='edit:week|focus')],
-            [InlineKeyboardButton(text='Тренировка 1', callback_data='workout:1')],
-            [InlineKeyboardButton(text='Тренировка 2', callback_data='workout:2')],
-            [InlineKeyboardButton(text='Тренировка 3', callback_data='workout:3')],
+            [InlineKeyboardButton(text='1️⃣Тренировка 1', callback_data='workout:1')],
+            [InlineKeyboardButton(text='2️⃣Тренировка 2', callback_data='workout:2')],
+            [InlineKeyboardButton(text='3️⃣Тренировка 3', callback_data='workout:3')],
             [InlineKeyboardButton(text='Поздравление с неделей', callback_data='edit:week|congratulations')],
             [InlineKeyboardButton(text='Общие практики', callback_data='edit:week|general_practices')],
             [InlineKeyboardButton(text='Трихотомия', callback_data='edit:week|trichotomy_practices')],

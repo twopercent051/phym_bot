@@ -57,8 +57,8 @@ class FeedbacksDB(Base):
     week_id = Column(Integer, nullable=False)
     workout_id = Column(Integer, nullable=False)
     feedback_1 = Column(String, nullable=False)
-    feedback_2 = Column(String, nullable=False)
-    feedback_week = Column(String, nullable=False)
+    feedback_2 = Column(String, nullable=True)
+    feedback_week = Column(String, nullable=True)
 
 
 class TextsDB(Base):

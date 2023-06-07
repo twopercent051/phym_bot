@@ -12,6 +12,7 @@ from tgbot.misc.text_config import msg_config, next_step_timer, user_profile_con
 from tgbot.models.sql_connector import UsersDAO, FeedbacksDAO
 from tgbot.services.scheduler import update_scheduler
 
+admin_group = config.tg_bot.admin_group
 router = Router()
 
 
@@ -24,12 +25,11 @@ async def user_start(message: Message):
         pass
     else:
         await UsersDAO.create(user_id=user_id, username=username)
-        await msg_config(user_id=user_id, chapter="intro|greeting")
-        # await update_scheduler(user_id=user_id, next_step="intro|how_it_work",
-        #                        dtime=datetime.utcnow() + timedelta(hours=1))
-        await update_scheduler(user_id=user_id, next_step="intro|how_it_work",
-                               dtime=datetime.utcnow() + timedelta(seconds=5))
-
+    await msg_config(user_id=user_id, chapter="intro|greeting")
+    # await update_scheduler(user_id=user_id, next_step="intro|how_it_work",
+    #                        dtime=datetime.utcnow() + timedelta(hours=1))
+    await update_scheduler(user_id=user_id, next_step="intro|how_it_work",
+                           dtime=datetime.utcnow() + timedelta(seconds=5))
 
 
 @router.callback_query(F.data == "no_ready")
@@ -205,6 +205,6 @@ async def get_trainer(message: Message, state: FSMContext):
     user_profile = await user_profile_config(user=user)
     admin_text = f"⚠️ Заявка на тренера:\n{user_profile}\nКонтакт: <i>{message.text}</i>"
     await message.answer(user_text)
-    await bot.send_message(chat_id=config.tg_bot.admin_group, text=admin_text)
+    await bot.send_message(chat_id=admin_group, text=admin_text)
 
 
